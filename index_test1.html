@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elektro Reinhardt — Elektroinstallation, Smart Home &amp; Notdienst</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#1B2024;
+    --graphite-light:#262D33;
+    --paper:#F6F5F1;
+    --paper-dim:#EDEBE4;
+    --amber:#F2A93B;
+    --amber-deep:#D68C1F;
+    --circuit:#3B6E91;
+    --copper:#B8703F;
+    --ok:#3C8B5C;
+    --err:#C24B3F;
+    --text:#1B2024;
+    --text-muted:#666D74;
+    --line: rgba(27,32,36,0.12);
+    --radius: 3px;
+    --ff-display:'Space Grotesk', sans-serif;
+    --ff-body:'Inter', sans-serif;
+    --ff-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+  body{
+    margin:0; background:var(--paper); color:var(--text);
+    font-family:var(--ff-body); line-height:1.55; font-size:16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:var(--ff-display); margin:0; letter-spacing:-0.01em; color:var(--graphite);}
+  a{color:inherit;}
+  img{max-width:100%; display:block;}
+  .mono{font-family:var(--ff-mono);}
+  .wrap{max-width:1160px; margin:0 auto; padding:0 24px;}
+  button{font-family:var(--ff-body); cursor:pointer;}
+  :focus-visible{outline:3px solid var(--amber); outline-offset:2px;}
+
+  /* Circuit rail — signature element: a schematic line that threads through every section,
+     with a junction node marking each section start, like a wiring diagram. */
+  .rail{
+    position:absolute; left:50%; top:0; bottom:0; width:2px;
+    background:repeating-linear-gradient(to bottom, var(--line) 0 6px, transparent 6px 12px);
+    transform:translateX(-50%); z-index:0; pointer-events:none;
+  }
+  .node{
+    position:relative; width:12px; height:12px; border-radius:50%;
+    background:var(--paper); border:2px solid var(--circuit); margin:0 auto 18px;
+    z-index:1;
+  }
+  .node::after{
+    content:''; position:absolute; inset:3px; border-radius:50%; background:var(--circuit);
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    position:sticky; top:0; z-index:100; background:rgba(246,245,241,0.92);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--line);
+  }
+  .nav{display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:1160px; margin:0 auto;}
+  .logo{font-family:var(--ff-display); font-weight:700; font-size:1.25rem; display:flex; align-items:center; gap:8px;}
+  .logo .bolt{color:var(--amber-deep);}
+  .navlinks{display:flex; gap:28px; list-style:none; margin:0; padding:0; font-size:0.94rem; font-weight:500;}
+  .navlinks a{text-decoration:none; color:var(--graphite); padding:6px 2px; border-bottom:2px solid transparent;}
+  .navlinks a:hover{border-color:var(--amber);}
+  .navcta{background:var(--graphite); color:var(--paper); border:none; padding:10px 18px; border-radius:var(--radius); font-weight:600; font-size:0.9rem; text-decoration:none;}
+  .navcta:hover{background:var(--amber-deep); color:var(--graphite);}
+  .burger{display:none; background:none; border:1px solid var(--line); padding:8px 10px; border-radius:var(--radius);}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative; padding:88px 24px 72px; overflow:hidden; background:var(--graphite); color:var(--paper);}
+  .hero::before{
+    content:''; position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+    background-size:34px 34px; opacity:0.6;
+  }
+  .hero-inner{position:relative; max-width:1160px; margin:0 auto; display:grid; grid-template-columns:1.15fr 0.85fr; gap:48px; align-items:center;}
+  .eyebrow{font-family:var(--ff-mono); font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--amber); margin-bottom:14px; display:flex; align-items:center; gap:8px;}
+  .eyebrow .dot{width:7px; height:7px; border-radius:50%; background:var(--ok); box-shadow:0 0 0 3px rgba(60,139,92,0.25); animation:pulse 2.2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:0.4;}}
+  .hero h1{font-size:clamp(2.1rem, 4.2vw, 3.4rem); color:#fff; line-height:1.08; margin-bottom:18px;}
+  .hero h1 em{font-style:normal; color:var(--amber);}
+  .hero p.lead{font-size:1.08rem; color:rgba(246,245,241,0.78); max-width:46ch; margin-bottom:30px;}
+  .hero-ctas{display:flex; gap:14px; flex-wrap:wrap;}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; padding:14px 26px; border-radius:var(--radius);
+    font-weight:600; font-size:0.96rem; text-decoration:none; border:1px solid transparent; transition:transform .15s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--amber); color:var(--graphite);}
+  .btn-primary:hover{background:var(--amber-deep);}
+  .btn-ghost{border-color:rgba(246,245,241,0.35); color:var(--paper);}
+  .btn-ghost:hover{border-color:var(--paper);}
+
+  /* breaker switch widget */
+  .breaker-panel{
+    background:var(--graphite-light); border:1px solid rgba(246,245,241,0.12); border-radius:6px; padding:22px;
+  }
+  .breaker-panel .label{font-family:var(--ff-mono); font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:rgba(246,245,241,0.55); margin-bottom:14px;}
+  .breaker-row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-top:1px solid rgba(246,245,241,0.08);}
+  .breaker-row:first-of-type{border-top:none;}
+  .breaker-row .name{color:#fff; font-size:0.92rem;}
+  .breaker-row .sub{font-family:var(--ff-mono); font-size:0.72rem; color:rgba(246,245,241,0.5);}
+  .switch{width:44px; height:24px; border-radius:20px; background:#3a4148; position:relative; flex-shrink:0; border:none;}
+  .switch::after{content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#8a9198; transition:all .2s ease;}
+  .switch.on{background:rgba(60,139,92,0.35);}
+  .switch.on::after{left:23px; background:var(--ok);}
+
+  /* ---------- SECTION SHELL ---------- */
+  section{position:relative; padding:80px 24px;}
+  .section-head{text-align:center; max-width:640px; margin:0 auto 48px;}
+  .section-head .eyebrow{justify-content:center; color:var(--copper);}
+  .section-head h2{font-size:clamp(1.7rem, 3vw, 2.3rem);}
+  .section-head p{color:var(--text-muted); margin-top:12px;}
+
+  /* ---------- SERVICES ---------- */
+  .panel-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:6px; overflow:hidden;}
+  .svc{background:var(--paper); padding:28px 24px; position:relative;}
+  .svc .idx{font-family:var(--ff-mono); font-size:0.72rem; color:var(--text-muted); letter-spacing:0.08em;}
+  .svc h3{font-size:1.08rem; margin:10px 0 8px;}
+  .svc p{font-size:0.9rem; color:var(--text-muted); margin:0;}
+  .svc .tag{display:inline-block; margin-top:12px; font-family:var(--ff-mono); font-size:0.68rem; padding:3px 8px; border-radius:2px; background:rgba(59,110,145,0.1); color:var(--circuit);}
+
+  /* ---------- ABOUT ---------- */
+  .about{display:grid; grid-template-columns:0.9fr 1.1fr; gap:56px; align-items:center;}
+  .stat-row{display:flex; gap:36px; margin-top:28px; flex-wrap:wrap;}
+  .stat b{font-family:var(--ff-display); font-size:1.9rem; display:block; color:var(--graphite);}
+  .stat span{font-size:0.8rem; color:var(--text-muted);}
+  .about-media{background:var(--graphite); border-radius:6px; aspect-ratio:4/3; position:relative; overflow:hidden;}
+  .about-media svg{position:absolute; inset:0; width:100%; height:100%;}
+
+  /* ---------- BOOKING ---------- */
+  .booking{background:var(--paper-dim);}
+  .booker{
+    max-width:820px; margin:0 auto; background:var(--paper); border:1px solid var(--line); border-radius:8px;
+    box-shadow:0 20px 50px -30px rgba(27,32,36,0.4);
+  }
+  .steps-bar{display:flex; border-bottom:1px solid var(--line);}
+  .step-tab{flex:1; padding:16px 10px; text-align:center; font-family:var(--ff-mono); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); position:relative;}
+  .step-tab.active{color:var(--graphite); font-weight:600;}
+  .step-tab.done{color:var(--ok);}
+  .step-tab::after{content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:transparent;}
+  .step-tab.active::after{background:var(--amber-deep);}
+  .step-tab.done::after{background:var(--ok);}
+  .booker-body{padding:32px;}
+  @media (max-width:640px){.booker-body{padding:22px;}}
+
+  .svc-pick{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:560px){.svc-pick{grid-template-columns:1fr;}}
+  .svc-opt{border:1px solid var(--line); border-radius:6px; padding:16px; text-align:left; background:#fff;}
+  .svc-opt:hover{border-color:var(--circuit);}
+  .svc-opt.sel{border-color:var(--amber-deep); background:rgba(242,169,59,0.08); box-shadow:0 0 0 1px var(--amber-deep);}
+  .svc-opt .n{font-weight:600; font-size:0.96rem; margin-bottom:4px;}
+  .svc-opt .d{font-size:0.82rem; color:var(--text-muted);}
+  .svc-opt .meta{font-family:var(--ff-mono); font-size:0.72rem; color:var(--circuit); margin-top:8px;}
+
+  .cal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+  .cal-head h4{font-size:1rem;}
+  .cal-nav{display:flex; gap:6px;}
+  .cal-nav button{background:none; border:1px solid var(--line); border-radius:4px; width:32px; height:32px;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:22px;}
+  .cal-dow{font-family:var(--ff-mono); font-size:0.68rem; text-align:center; color:var(--text-muted); padding-bottom:4px;}
+  .cal-day{aspect-ratio:1; border:1px solid var(--line); border-radius:4px; background:#fff; font-size:0.85rem; display:flex; align-items:center; justify-content:center; position:relative;}
+  .cal-day.empty{border:none; background:transparent;}
+  .cal-day.avail:hover{border-color:var(--circuit); cursor:pointer;}
+  .cal-day.blocked{background:var(--paper-dim); color:var(--text-muted); text-decoration:line-through; cursor:not-allowed;}
+  .cal-day.past{background:transparent; border-color:transparent; color:#ccc; cursor:not-allowed;}
+  .cal-day.sel{background:var(--amber-deep); border-color:var(--amber-deep); color:#fff; font-weight:700;}
+  .cal-day .dot-vac{position:absolute; bottom:3px; width:4px; height:4px; border-radius:50%; background:var(--err);}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; font-size:0.78rem; color:var(--text-muted); margin-bottom:20px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .legend i{width:10px; height:10px; border-radius:2px; display:inline-block;}
+
+  .slots{display:grid; grid-template-columns:repeat(auto-fill, minmax(90px,1fr)); gap:8px;}
+  .slot{border:1px solid var(--line); border-radius:4px; padding:10px 4px; text-align:center; font-family:var(--ff-mono); font-size:0.84rem; background:#fff;}
+  .slot:hover{border-color:var(--circuit);}
+  .slot.sel{background:var(--graphite); color:var(--paper); border-color:var(--graphite);}
+  .no-slots{padding:14px; text-align:center; color:var(--text-muted); font-size:0.9rem; border:1px dashed var(--line); border-radius:6px;}
+
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:560px){.form-grid{grid-template-columns:1fr;}}
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field.full{grid-column:1/-1;}
+  .field label{font-size:0.82rem; font-weight:600; color:var(--graphite);}
+  .field label .req{color:var(--err);}
+  .field input, .field textarea, .field select{
+    border:1px solid var(--line); border-radius:4px; padding:11px 12px; font-family:var(--ff-body); font-size:0.94rem; background:#fff; color:var(--text);
+  }
+  .field input:focus, .field textarea:focus{border-color:var(--circuit);}
+  .field.error input, .field.error textarea{border-color:var(--err);}
+  .field .err-msg{font-size:0.76rem; color:var(--err); min-height:14px;}
+  .checkline{display:flex; align-items:flex-start; gap:10px; font-size:0.84rem; color:var(--text-muted); grid-column:1/-1;}
+  .checkline input{margin-top:3px;}
+  .checkline a{color:var(--circuit); text-decoration:underline;}
+
+  .pay-card{border:1px solid var(--line); border-radius:6px; padding:20px; background:#fff;}
+  .pay-note{background:rgba(59,110,145,0.08); border:1px solid rgba(59,110,145,0.25); color:var(--circuit); font-size:0.82rem; padding:12px 14px; border-radius:6px; margin-bottom:18px;}
+  .demo-tag{display:inline-block; font-family:var(--ff-mono); font-size:0.68rem; background:var(--amber); color:var(--graphite); padding:2px 7px; border-radius:2px; margin-left:6px; vertical-align:middle;}
+
+  .summary-line{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:0.92rem;}
+  .summary-line:last-child{border-bottom:none;}
+  .summary-line span:first-child{color:var(--text-muted);}
+
+  .booker-footer{display:flex; justify-content:space-between; padding:20px 32px; border-top:1px solid var(--line);}
+  @media (max-width:640px){.booker-footer{padding:16px 22px;}}
+  .btn-plain{background:none; border:1px solid var(--line); padding:12px 20px; border-radius:var(--radius); font-weight:600; font-size:0.9rem;}
+  .btn-dark{background:var(--graphite); color:#fff; border:none; padding:12px 24px; border-radius:var(--radius); font-weight:600; font-size:0.9rem;}
+  .btn-dark:hover{background:var(--amber-deep); color:var(--graphite);}
+  .btn-dark:disabled{opacity:0.4; cursor:not-allowed;}
+
+  .confirm-box{text-align:center; padding:20px 0;}
+  .confirm-box .check{width:56px; height:56px; border-radius:50%; background:rgba(60,139,92,0.12); color:var(--ok); display:flex; align-items:center; justify-content:center; margin:0 auto 18px; font-size:1.6rem;}
+  .email-preview{text-align:left; background:var(--paper-dim); border:1px solid var(--line); border-radius:6px; padding:18px; margin-top:20px; font-size:0.88rem;}
+  .email-preview .hdr{font-family:var(--ff-mono); font-size:0.74rem; color:var(--text-muted); margin-bottom:10px; border-bottom:1px dashed var(--line); padding-bottom:8px;}
+
+  /* ---------- ADMIN ---------- */
+  .admin-toggle{position:fixed; bottom:18px; right:18px; z-index:90; background:var(--graphite); color:#fff; border:none; width:44px; height:44px; border-radius:50%; font-family:var(--ff-mono); font-size:0.78rem; box-shadow:0 8px 20px -6px rgba(0,0,0,0.4);}
+  .admin-panel{position:fixed; bottom:0; right:0; top:0; width:min(380px,100%); background:#fff; z-index:99; box-shadow:-10px 0 40px -10px rgba(0,0,0,0.3); transform:translateX(100%); transition:transform .25s ease; overflow-y:auto; border-left:1px solid var(--line);}
+  .admin-panel.open{transform:translateX(0);}
+  .admin-head{padding:20px 22px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;}
+  .admin-body{padding:22px;}
+  .admin-body h4{font-size:0.9rem; margin-bottom:10px;}
+  .blocklist{list-style:none; padding:0; margin:0 0 18px; display:flex; flex-direction:column; gap:8px;}
+  .blocklist li{display:flex; justify-content:space-between; align-items:center; border:1px solid var(--line); border-radius:4px; padding:8px 10px; font-size:0.84rem;}
+  .blocklist button{background:none; border:none; color:var(--err); font-size:0.78rem;}
+  .admin-row{display:flex; gap:8px; margin-bottom:8px;}
+  .admin-row input{flex:1; border:1px solid var(--line); border-radius:4px; padding:8px 10px; font-size:0.84rem;}
+  .admin-row button{background:var(--graphite); color:#fff; border:none; border-radius:4px; padding:8px 12px; font-size:0.8rem;}
+  .weekday-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:20px;}
+  .weekday-grid button{font-size:0.72rem; padding:8px 2px; border:1px solid var(--line); background:#fff; border-radius:4px;}
+  .weekday-grid button.off{background:var(--graphite); color:#fff;}
+
+  /* ---------- CONTACT ---------- */
+  .contact-grid{display:grid; grid-template-columns:1fr 1fr; gap:48px;}
+  .contact-card{border:1px solid var(--line); border-radius:6px; padding:24px; background:#fff;}
+  .contact-card .row{display:flex; gap:12px; padding:10px 0; border-top:1px solid var(--line); font-size:0.92rem;}
+  .contact-card .row:first-of-type{border-top:none;}
+  .contact-card .row b{min-width:110px; color:var(--text-muted); font-weight:600; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.03em;}
+  .map-block{border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--graphite-light); min-height:220px; display:flex; align-items:center; justify-content:center; color:rgba(246,245,241,0.5); font-family:var(--ff-mono); font-size:0.8rem;}
+
+  /* ---------- FOOTER ---------- */
+  footer{background:var(--graphite); color:rgba(246,245,241,0.7); padding:48px 24px 28px;}
+  .foot-grid{display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; max-width:1160px; margin:0 auto 28px;}
+  footer a{color:rgba(246,245,241,0.7); text-decoration:none; font-size:0.86rem;}
+  footer a:hover{color:var(--amber);}
+  .foot-cols{display:flex; gap:56px; flex-wrap:wrap;}
+  .foot-col h5{font-family:var(--ff-mono); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:rgba(246,245,241,0.45); margin-bottom:12px;}
+  .foot-col ul{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;}
+  .foot-bottom{border-top:1px solid rgba(246,245,241,0.12); padding-top:18px; max-width:1160px; margin:0 auto; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:0.78rem; font-family:var(--ff-mono); color:rgba(246,245,241,0.45);}
+
+  /* ---------- LEGAL MODAL ---------- */
+  .modal-bg{position:fixed; inset:0; background:rgba(27,32,36,0.6); z-index:200; display:none; align-items:flex-start; justify-content:center; padding:5vh 20px; overflow-y:auto;}
+  .modal-bg.open{display:flex;}
+  .modal{background:#fff; max-width:720px; width:100%; border-radius:8px; padding:36px; margin-bottom:5vh;}
+  .modal h2{margin-bottom:6px;}
+  .modal h3{font-size:1rem; margin:22px 0 8px;}
+  .modal p, .modal li{font-size:0.9rem; color:var(--text-muted); line-height:1.65;}
+  .modal-close{float:right; background:none; border:1px solid var(--line); border-radius:4px; width:32px; height:32px;}
+
+  .toast{position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-140%); background:var(--graphite); color:#fff; padding:12px 20px; border-radius:6px; font-size:0.86rem; z-index:300; transition:transform .3s ease; box-shadow:0 12px 30px -10px rgba(0,0,0,0.5);}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:880px){
+    .navlinks{display:none;}
+    .burger{display:block;}
+    .hero-inner{grid-template-columns:1fr;}
+    .panel-grid{grid-template-columns:1fr 1fr;}
+    .about{grid-template-columns:1fr;}
+    .contact-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:560px){
+    .panel-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ================= HEADER ================= -->
+<header>
+  <nav class="nav">
+    <div class="logo"><span class="bolt">⚡</span>ELEKTRO REINHARDT</div>
+    <ul class="navlinks">
+      <li><a href="#leistungen">Leistungen</a></li>
+      <li><a href="#ueber-uns">Über uns</a></li>
+      <li><a href="#buchen">Termin buchen</a></li>
+      <li><a href="#kontakt">Kontakt</a></li>
+    </ul>
+    <a href="#buchen" class="navcta">Termin buchen</a>
+    <button class="burger" aria-label="Menü">☰</button>
+  </nav>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="eyebrow"><span class="dot"></span> Notdienst heute erreichbar</div>
+      <h1>Elektrotechnik, die <em>hält</em>, was der Plan verspricht.</h1>
+      <p class="lead">Installation, Smart Home, Photovoltaik und Prüfungen aus einer Hand — Meisterbetrieb im Raum Musterstadt, Termine in wenigen Klicks online buchbar.</p>
+      <div class="hero-ctas">
+        <a href="#buchen" class="btn btn-primary">Termin online buchen →</a>
+        <a href="#leistungen" class="btn btn-ghost">Leistungen ansehen</a>
+      </div>
+    </div>
+    <div class="breaker-panel">
+      <div class="label">Betriebsstatus · Stromkreise</div>
+      <div class="breaker-row">
+        <div><div class="name">Terminbuchung</div><div class="sub">online, live verfügbar</div></div>
+        <button class="switch on" aria-label="Terminbuchung aktiv" disabled></button>
+      </div>
+      <div class="breaker-row">
+        <div><div class="name">Notdienst</div><div class="sub">Mo–So, 24h</div></div>
+        <button class="switch on" aria-label="Notdienst aktiv" disabled></button>
+      </div>
+      <div class="breaker-row">
+        <div><div class="name">Werkstatt</div><div class="sub">Mo–Fr 07:30–16:30</div></div>
+        <button class="switch on" aria-label="Werkstatt aktiv" disabled></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LEISTUNGEN ================= -->
+<section id="leistungen">
+  <div class="node"></div>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Leistungsverzeichnis</div>
+      <h2>Sechs Stromkreise, ein Ansprechpartner</h2>
+      <p>Jede Leistung unten entspricht einem eigenen Buchungstyp im Terminkalender.</p>
+    </div>
+    <div class="panel-grid" id="services-grid"></div>
+  </div>
+</section>
+
+<!-- ================= ÜBER UNS ================= -->
+<section id="ueber-uns" style="background:var(--paper-dim);">
+  <div class="node"></div>
+  <div class="wrap about">
+    <div>
+      <div class="eyebrow">Über den Betrieb</div>
+      <h2>Meisterbetrieb, drei Monteure, ein Terminkalender.</h2>
+      <p style="color:var(--text-muted); margin-top:14px;">Elektro Reinhardt ist ein eingetragener Elektrofachbetrieb. Jeder online gebuchte Termin landet automatisch im internen Kalender der Monteure — inklusive Anfahrtszeit, Materialbedarf und Servicehistorie.</p>
+      <div class="stat-row">
+        <div class="stat"><b>15+</b><span>Jahre am Standort</span></div>
+        <div class="stat"><b>3</b><span>Monteure im Außendienst</span></div>
+        <div class="stat"><b>&lt; 24h</b><span>Rückmeldung im Notdienst</span></div>
+      </div>
+    </div>
+    <div class="about-media">
+      <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+        <defs><pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="rgba(255,255,255,0.06)"/></pattern></defs>
+        <rect width="400" height="300" fill="url(#grid)"/>
+        <path d="M40 220 L40 160 L120 160 L120 90 L220 90 L220 130 L320 130 L320 60" stroke="#F2A93B" stroke-width="2" fill="none"/>
+        <circle cx="40" cy="220" r="5" fill="#F2A93B"/>
+        <circle cx="120" cy="160" r="5" fill="#3B6E91"/>
+        <circle cx="220" cy="90" r="5" fill="#F2A93B"/>
+        <circle cx="320" cy="60" r="5" fill="#3B6E91"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BOOKING ================= -->
+<section id="buchen" class="booking">
+  <div class="node"></div>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Terminbuchung</div>
+      <h2>Termin in vier Schritten</h2>
+      <p>Urlaubs- und Schließtage sind automatisch gesperrt. Nach der Buchung erhalten Sie sofort eine Bestätigung sowie eine Erinnerung vor dem Termin.</p>
+    </div>
+
+    <div class="booker">
+      <div class="steps-bar" id="steps-bar"></div>
+      <div class="booker-body" id="booker-body"></div>
+      <div class="booker-footer">
+        <button class="btn-plain" id="btn-back">Zurück</button>
+        <button class="btn-dark" id="btn-next">Weiter</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= KONTAKT ================= -->
+<section id="kontakt">
+  <div class="node"></div>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Kontakt</div>
+      <h2>Lieber direkt sprechen?</h2>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-card">
+        <div class="row"><b>Adresse</b><span>Musterstraße 12, 12345 Musterstadt</span></div>
+        <div class="row"><b>Telefon</b><span>0 12 34 / 56 78 90</span></div>
+        <div class="row"><b>Notdienst</b><span>0 12 34 / 99 99 99 (24h)</span></div>
+        <div class="row"><b>E-Mail</b><span>info@elektro-reinhardt-demo.de</span></div>
+        <div class="row"><b>Öffnungszeiten</b><span>Mo–Fr 07:30–16:30 Uhr</span></div>
+      </div>
+      <div class="map-block">— Kartenintegration folgt (z. B. Google Maps Embed) —</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="foot-grid">
+    <div>
+      <div class="logo" style="color:#fff;"><span class="bolt">⚡</span>ELEKTRO REINHARDT</div>
+      <p style="max-width:32ch; font-size:0.86rem; margin-top:10px;">Elektroinstallation, Smart Home und Notdienst im Raum Musterstadt.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col">
+        <h5>Seite</h5>
+        <ul><li><a href="#leistungen">Leistungen</a></li><li><a href="#buchen">Termin buchen</a></li><li><a href="#kontakt">Kontakt</a></li></ul>
+      </div>
+      <div class="foot-col">
+        <h5>Rechtliches</h5>
+        <ul><li><a href="#" id="link-impressum">Impressum</a></li><li><a href="#" id="link-datenschutz">Datenschutzerklärung</a></li></ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 Elektro Reinhardt · Demo-Website</span>
+    <span>Muster-Inhalt, vor Livegang rechtlich prüfen lassen</span>
+  </div>
+</footer>
+
+<button class="admin-toggle" id="admin-toggle" title="Admin: Urlaub &amp; Schließtage">⚙</button>
+<div class="admin-panel" id="admin-panel">
+  <div class="admin-head">
+    <strong>Verwaltung</strong>
+    <button class="modal-close" id="admin-close">✕</button>
+  </div>
+  <div class="admin-body">
+    <h4>Wöchentliche Schließtage</h4>
+    <div class="weekday-grid" id="weekday-grid"></div>
+
+    <h4>Urlaub / Schließtage (Datum)</h4>
+    <div class="admin-row">
+      <input type="date" id="admin-date-input">
+      <input type="text" id="admin-date-label" placeholder="Grund (z. B. Betriebsurlaub)">
+    </div>
+    <button style="background:var(--graphite); color:#fff; border:none; border-radius:4px; padding:9px 14px; font-size:0.82rem; margin-bottom:16px;" id="admin-add-date">Sperrtag hinzufügen</button>
+    <ul class="blocklist" id="admin-blocklist"></ul>
+    <p style="font-size:0.76rem; color:var(--text-muted); margin-top:12px;">Demo-Zugriff — in Produktion durch echten Login (z. B. Firmen-Account) ersetzen. Änderungen wirken sich sofort auf den Kalender oben aus.</p>
+  </div>
+</div>
+
+<!-- Legal modals -->
+<div class="modal-bg" id="modal-impressum">
+  <div class="modal">
+    <button class="modal-close" data-close>✕</button>
+    <h2>Impressum</h2>
+    <p><em>Muster-Impressum — vor Veröffentlichung durch die tatsächlichen Firmendaten ersetzen und rechtlich prüfen lassen (Angaben gemäß § 5 TMG).</em></p>
+    <h3>Angaben gemäß § 5 TMG</h3>
+    <p>Elektro Reinhardt GmbH<br>Musterstraße 12<br>12345 Musterstadt</p>
+    <h3>Vertreten durch</h3>
+    <p>Max Reinhardt (Geschäftsführer)</p>
+    <h3>Kontakt</h3>
+    <p>Telefon: 0 12 34 / 56 78 90<br>E-Mail: info@elektro-reinhardt-demo.de</p>
+    <h3>Registereintrag</h3>
+    <p>Eintragung im Handelsregister.<br>Registergericht: Amtsgericht Musterstadt<br>Registernummer: HRB XXXXX</p>
+    <h3>Umsatzsteuer-ID</h3>
+    <p>Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: DE XXXXXXXXX</p>
+    <h3>Handwerkskammer</h3>
+    <p>Zuständige Handwerkskammer: Handwerkskammer Musterstadt<br>Eingetragen in die Handwerksrolle als Elektrotechniker-Handwerk.</p>
+    <h3>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h3>
+    <p>Max Reinhardt, Anschrift wie oben</p>
+    <h3>EU-Streitschlichtung</h3>
+    <p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit. Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-datenschutz">
+  <div class="modal">
+    <button class="modal-close" data-close>✕</button>
+    <h2>Datenschutzerklärung</h2>
+    <p><em>Muster-Text auf Basis üblicher DSGVO-Pflichtangaben — ersetzt keine Rechtsberatung. Vor Livegang durch eine:n Datenschutzbeauftragte:n oder Rechtsanwalt:in prüfen lassen, insbesondere hinsichtlich Zahlungsdienstleister, E-Mail-Versand und ggf. eingesetzter Kalender-/CRM-Software.</em></p>
+    <h3>1. Verantwortlicher</h3>
+    <p>Elektro Reinhardt GmbH, Musterstraße 12, 12345 Musterstadt, info@elektro-reinhardt-demo.de</p>
+    <h3>2. Verarbeitung bei der Online-Terminbuchung</h3>
+    <p>Bei einer Terminbuchung erheben wir Name, Telefonnummer, E-Mail-Adresse, Adresse sowie die von Ihnen gewählte Leistung und den gewünschten Termin. Diese Daten werden zur Terminplanung, Auftragsabwicklung und Kommunikation verarbeitet (Art. 6 Abs. 1 lit. b DSGVO) und in unserem internen Terminkalender sowie ggf. bei einem eingesetzten Kalenderdienst gespeichert.</p>
+    <h3>3. Bestätigungs- und Erinnerungs-E-Mails</h3>
+    <p>Zur Bestätigung Ihres Termins sowie zur automatischen Erinnerung vor dem Termin versenden wir E-Mails über einen E-Mail-Versanddienstleister. Rechtsgrundlage ist die Vertragsanbahnung bzw. -erfüllung (Art. 6 Abs. 1 lit. b DSGVO).</p>
+    <h3>4. Zahlungsabwicklung</h3>
+    <p>Sofern eine Anzahlung online geleistet wird, werden Zahlungsdaten direkt durch den eingesetzten Zahlungsdienstleister verarbeitet; uns liegen keine vollständigen Zahlungskartendaten vor.</p>
+    <h3>5. Speicherdauer</h3>
+    <p>Wir speichern Ihre Daten nur so lange, wie es für die Terminabwicklung sowie gesetzliche Aufbewahrungspflichten (z. B. handels- und steuerrechtlich) erforderlich ist.</p>
+    <h3>6. Ihre Rechte</h3>
+    <p>Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit sowie Widerspruch gegen die Verarbeitung Ihrer Daten. Zudem besteht ein Beschwerderecht bei einer Datenschutzaufsichtsbehörde.</p>
+    <h3>7. Kontakt</h3>
+    <p>Bei Fragen zum Datenschutz wenden Sie sich an info@elektro-reinhardt-demo.de.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- SERVICES DATA ---------------- */
+  const SERVICES = [
+    {id:'install', code:'01', name:'Elektroinstallation', desc:'Neuinstallation & Modernisierung in Haus und Wohnung.', duration:120, tag:'Vor-Ort-Termin', deposit:0},
+    {id:'smarthome', code:'02', name:'Smart Home', desc:'Planung und Einbau vernetzter Haussteuerung.', duration:90, tag:'Beratung + Angebot', deposit:0},
+    {id:'pv', code:'03', name:'Photovoltaik & Speicher', desc:'Erstberatung für PV-Anlage und Batteriespeicher.', duration:60, tag:'kostenpflichtige Anzahlung', deposit:29},
+    {id:'wallbox', code:'04', name:'E-Mobilität / Wallbox', desc:'Montage und Anschluss einer Wallbox.', duration:90, tag:'Vor-Ort-Termin', deposit:0},
+    {id:'echeck', code:'05', name:'E-Check / DGUV V3', desc:'Sicherheitsprüfung ortsfester und -veränderlicher Anlagen.', duration:60, tag:'Prüftermin', deposit:0},
+    {id:'notdienst', code:'06', name:'Notdienst', desc:'Kurzfristige Störungsbehebung, auch außerhalb der Regelzeiten.', duration:60, tag:'24h erreichbar', deposit:0},
+  ];
+
+  const grid = document.getElementById('services-grid');
+  SERVICES.forEach(s=>{
+    const el = document.createElement('div');
+    el.className='svc';
+    el.innerHTML = `<div class="idx">STROMKREIS ${s.code}</div><h3>${s.name}</h3><p>${s.desc}</p><span class="tag">${s.tag}</span>`;
+    grid.appendChild(el);
+  });
+
+  /* ---------------- SHARED CONFIG (window.storage) ----------------
+     admin-config  -> { closedWeekdays:[0..6], blockedDates:[{date:'YYYY-MM-DD', label:''}] }
+     bookings:<id> -> booking object
+     booking-index -> array of booking ids
+  ------------------------------------------------------------------ */
+  const DEFAULT_CONFIG = { closedWeekdays:[0,6], blockedDates:[] }; // Sonntag(0) & Samstag(6) zu
+  let config = structuredClone(DEFAULT_CONFIG);
+
+  async function loadConfig(){
+    try{
+      const res = await window.storage.get('admin-config', true);
+      if(res && res.value){ config = JSON.parse(res.value); }
+      else { await window.storage.set('admin-config', JSON.stringify(DEFAULT_CONFIG), true); config = structuredClone(DEFAULT_CONFIG); }
+    }catch(e){ config = structuredClone(DEFAULT_CONFIG); }
+    renderCalendar(); renderAdmin();
+  }
+  async function saveConfig(){
+    try{ await window.storage.set('admin-config', JSON.stringify(config), true); }catch(e){ showToast('Speichern fehlgeschlagen (Demo-Speicher).'); }
+  }
+
+  function isoDate(d){ return d.toISOString().slice(0,10); }
+
+  function isDateBlocked(dateObj){
+    const iso = isoDate(dateObj);
+    if(config.closedWeekdays.includes(dateObj.getDay())) return true;
+    return config.blockedDates.some(b=>b.date===iso);
+  }
+
+  /* ---------------- ADMIN PANEL ---------------- */
+  const adminToggle = document.getElementById('admin-toggle');
+  const adminPanel = document.getElementById('admin-panel');
+  adminToggle.addEventListener('click', ()=>{
+    const pass = adminPanel.classList.contains('open') ? null : prompt('Demo-Admin-Zugang — Passwort eingeben:');
+    if(adminPanel.classList.contains('open')){ adminPanel.classList.remove('open'); return; }
+    if(pass === 'admin123'){ adminPanel.classList.add('open'); }
+    else if(pass!==null){ showToast('Falsches Passwort (Demo: admin123)'); }
+  });
+  document.getElementById('admin-close').addEventListener('click', ()=>adminPanel.classList.remove('open'));
+
+  const DOW_LABELS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  function renderAdmin(){
+    const wgrid = document.getElementById('weekday-grid');
+    wgrid.innerHTML='';
+    DOW_LABELS.forEach((lab,i)=>{
+      const b = document.createElement('button');
+      b.textContent = lab;
+      if(config.closedWeekdays.includes(i)) b.classList.add('off');
+      b.addEventListener('click', async ()=>{
+        const idx = config.closedWeekdays.indexOf(i);
+        if(idx>-1) config.closedWeekdays.splice(idx,1); else config.closedWeekdays.push(i);
+        await saveConfig(); renderAdmin(); renderCalendar();
+      });
+      wgrid.appendChild(b);
+    });
+
+    const list = document.getElementById('admin-blocklist');
+    list.innerHTML='';
+    if(config.blockedDates.length===0){
+      list.innerHTML = '<li style="justify-content:center;color:var(--text-muted);">Keine Sperrtage eingetragen</li>';
+    }
+    config.blockedDates.sort((a,b)=>a.date.localeCompare(b.date)).forEach(bd=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<span>${bd.date} — ${bd.label||'Urlaub'}</span>`;
+      const btn = document.createElement('button');
+      btn.textContent='Entfernen';
+      btn.addEventListener('click', async ()=>{
+        config.blockedDates = config.blockedDates.filter(x=>x.date!==bd.date);
+        await saveConfig(); renderAdmin(); renderCalendar();
+      });
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+  }
+  document.getElementById('admin-add-date').addEventListener('click', async ()=>{
+    const dateVal = document.getElementById('admin-date-input').value;
+    const label = document.getElementById('admin-date-label').value.trim();
+    if(!dateVal){ showToast('Bitte ein Datum wählen.'); return; }
+    if(config.blockedDates.some(b=>b.date===dateVal)){ showToast('Datum ist bereits gesperrt.'); return; }
+    config.blockedDates.push({date:dateVal, label: label || 'Urlaub'});
+    await saveConfig(); renderAdmin(); renderCalendar();
+    document.getElementById('admin-date-input').value=''; document.getElementById('admin-date-label').value='';
+    showToast('Sperrtag hinzugefügt.');
+  });
+
+  /* ---------------- TOAST ---------------- */
+  let toastTimer;
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
+  }
+
+  /* ---------------- LEGAL MODALS ---------------- */
+  function bindModal(linkId, modalId){
+    document.getElementById(linkId).addEventListener('click', e=>{ e.preventDefault(); document.getElementById(modalId).classList.add('open'); });
+  }
+  bindModal('link-impressum','modal-impressum');
+  bindModal('link-datenschutz','modal-datenschutz');
+  document.querySelectorAll('.modal-bg').forEach(bg=>{
+    bg.addEventListener('click', e=>{ if(e.target===bg) bg.classList.remove('open'); });
+    bg.querySelector('[data-close]').addEventListener('click', ()=>bg.classList.remove('open'));
+  });
+
+  /* ================= BOOKING WIZARD ================= */
+  const STEP_LABELS = ['Leistung','Termin','Kontakt','Zahlung','Bestätigung'];
+  let step = 0;
+  let booking = { serviceId:null, date:null, time:null, name:'', phone:'', email:'', address:'', plz:'', message:'', payment:'skip', cardName:'', cardNumber:'' };
+  let calMonthOffset = 0; // 0 = current month shown first
+
+  const stepsBar = document.getElementById('steps-bar');
+  const body = document.getElementById('booker-body');
+  const btnBack = document.getElementById('btn-back');
+  const btnNext = document.getElementById('btn-next');
+
+  function currentService(){ return SERVICES.find(s=>s.id===booking.serviceId); }
+  function needsPaymentStep(){ const s = currentService(); return s && s.deposit > 0; }
+  function visibleSteps(){
+    // Zahlung nur anzeigen, wenn die Leistung eine Anzahlung erfordert
+    return STEP_LABELS.filter((label,i)=> label!=='Zahlung' || needsPaymentStep());
+  }
+
+  function renderStepsBar(){
+    const labels = visibleSteps();
+    stepsBar.innerHTML='';
+    labels.forEach((label,i)=>{
+      const realIndex = STEP_LABELS.indexOf(label);
+      const div = document.createElement('div');
+      div.className = 'step-tab' + (realIndex===step ? ' active' : (realIndex<step ? ' done':''));
+      div.textContent = (i+1)+'. '+label;
+      stepsBar.appendChild(div);
+    });
+  }
+
+  function goStep(delta){
+    const labels = visibleSteps().map(l=>STEP_LABELS.indexOf(l));
+    const pos = labels.indexOf(step);
+    let next = pos + delta;
+    if(next<0) next=0;
+    if(next>=labels.length) next=labels.length-1;
+    step = labels[next];
+    render();
+  }
+
+  function validateStep(){
+    if(step===0) return !!booking.serviceId;
+    if(step===1) return !!(booking.date && booking.time);
+    if(step===2){
+      return validateForm(false);
+    }
+    if(step===3){
+      if(booking.payment==='card'){
+        return booking.cardName.trim().length>1 && /^[0-9]{12,19}$/.test(booking.cardNumber.replace(/\s/g,''));
+      }
+      return true;
+    }
+    return true;
+  }
+
+  btnBack.addEventListener('click', ()=>{
+    if(step===0) return;
+    goStep(-1);
+  });
+  btnNext.addEventListener('click', async ()=>{
+    if(step===4){ resetWizard(); return; }
+    if(!validateStep()){
+      if(step===2) validateForm(true);
+      else showToast('Bitte Angaben vervollständigen.');
+      return;
+    }
+    if(step===3 || (step===2 && !needsPaymentStep())){
+      // letzte inhaltliche Eingabe vor Bestätigung -> Buchung abschließen
+      await submitBooking();
+      step = 4; render(); return;
+    }
+    goStep(1);
+  });
+
+  function resetWizard(){
+    step=0;
+    booking = { serviceId:null, date:null, time:null, name:'', phone:'', email:'', address:'', plz:'', message:'', payment:'skip', cardName:'', cardNumber:'' };
+    render();
+  }
+
+  function render(){
+    renderStepsBar();
+    if(step===0) renderStepService();
+    else if(step===1) renderStepDate();
+    else if(step===2) renderStepForm();
+    else if(step===3) renderStepPayment();
+    else renderStepConfirm();
+
+    btnBack.style.visibility = step===0 || step===4 ? 'hidden' : 'visible';
+    btnNext.textContent = step===4 ? 'Neue Buchung starten' : (step===3 || (step===2 && !needsPaymentStep()) ? 'Termin verbindlich buchen' : 'Weiter');
+  }
+
+  /* ---- Step 0: Leistung ---- */
+  function renderStepService(){
+    let html = '<div class="svc-pick">';
+    SERVICES.forEach(s=>{
+      html += `<button class="svc-opt ${booking.serviceId===s.id?'sel':''}" data-id="${s.id}">
+        <div class="n">${s.name}</div>
+        <div class="d">${s.desc}</div>
+        <div class="meta">${s.duration} Min ${s.deposit>0 ? '· Anzahlung '+s.deposit+' €' : ''}</div>
+      </button>`;
+    });
+    html += '</div>';
+    body.innerHTML = html;
+    body.querySelectorAll('.svc-opt').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ booking.serviceId = btn.dataset.id; render(); });
+    });
+  }
+
+  /* ---- Step 1: Termin (Kalender + Slots) ---- */
+  function renderStepDate(){
+    const now = new Date();
+    const viewDate = new Date(now.getFullYear(), now.getMonth()+calMonthOffset, 1);
+    const monthName = viewDate.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+
+    let html = `
+      <div class="cal-head">
+        <h4>${monthName}</h4>
+        <div class="cal-nav">
+          <button id="cal-prev" ${calMonthOffset<=0?'disabled':''}>‹</button>
+          <button id="cal-next">›</button>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i style="background:#fff;border:1px solid var(--line);"></i>Verfügbar</span>
+        <span><i style="background:var(--amber-deep);"></i>Ausgewählt</span>
+        <span><i style="background:var(--paper-dim);"></i>Geschlossen / Urlaub</span>
+      </div>
+      <div class="cal-grid">
+        ${DOW_LABELS.slice(1).concat(DOW_LABELS[0]).map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+    `;
+
+    const firstDow = (viewDate.getDay()+6)%7; // Montag=0
+    for(let i=0;i<firstDow;i++) html += '<div class="cal-day empty"></div>';
+
+    const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 0).getDate();
+    for(let d=1; d<=daysInMonth; d++){
+      const dateObj = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
+      const iso = isoDate(dateObj);
+      const isPast = dateObj < new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      const blocked = isDateBlocked(dateObj);
+      const isVac = config.blockedDates.some(b=>b.date===iso);
+      let cls='cal-day';
+      if(isPast) cls+=' past';
+      else if(blocked) cls+=' blocked';
+      else cls+=' avail';
+      if(booking.date===iso) cls+=' sel';
+      html += `<div class="${cls}" data-date="${isPast||blocked?'':iso}" title="${isVac?'Urlaub/Schließtag':''}">${d}${isVac&&!isPast?'<span class="dot-vac"></span>':''}</div>`;
+    }
+    html += '</div><div id="slots-wrap"></div>';
+    body.innerHTML = html;
+
+    document.getElementById('cal-prev').addEventListener('click', ()=>{ calMonthOffset--; renderStepDate(); });
+    document.getElementById('cal-next').addEventListener('click', ()=>{ calMonthOffset++; renderStepDate(); });
+    body.querySelectorAll('.cal-day.avail, .cal-day.sel').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        if(!el.dataset.date) return;
+        booking.date = el.dataset.date; booking.time=null;
+        renderStepDate();
+      });
+    });
+    renderSlots();
+  }
+
+  function renderSlots(){
+    const wrap = document.getElementById('slots-wrap');
+    if(!wrap) return;
+    if(!booking.date){ wrap.innerHTML=''; return; }
+    const service = currentService();
+    const dur = service ? service.duration : 60;
+    const startHour=8, endHour=16;
+    const slotMinutes = dur<=60?60:dur; // vereinfachtes Slot-Raster
+    let slots=[];
+    for(let h=startHour; h<endHour; h++){
+      slots.push(String(h).padStart(2,'0')+':00');
+      if(slotMinutes<=60) slots.push(String(h).padStart(2,'0')+':30');
+    }
+    if(slots.length===0){ wrap.innerHTML='<div class="no-slots">Keine freien Slots — bitte anderes Datum wählen.</div>'; return; }
+    let html = '<h4 style="margin:18px 0 12px;font-size:0.92rem;">Uhrzeit wählen</h4><div class="slots">';
+    slots.forEach(t=>{
+      html += `<button class="slot ${booking.time===t?'sel':''}" data-t="${t}">${t}</button>`;
+    });
+    html += '</div>';
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('.slot').forEach(el=>{
+      el.addEventListener('click', ()=>{ booking.time = el.dataset.t; renderSlots(); document.querySelectorAll('.slot').forEach(s=>s.classList.toggle('sel', s.dataset.t===booking.time)); });
+    });
+  }
+
+  /* ---- Step 2: Kontaktformular ---- */
+  const FORM_FIELDS = [
+    {id:'name', label:'Name', req:true, type:'text'},
+    {id:'phone', label:'Telefon', req:true, type:'tel'},
+    {id:'email', label:'E-Mail', req:true, type:'email'},
+    {id:'address', label:'Straße & Hausnummer', req:true, type:'text'},
+    {id:'plz', label:'PLZ & Ort', req:true, type:'text'},
+  ];
+  function renderStepForm(){
+    let html = '<div class="form-grid">';
+    FORM_FIELDS.forEach(f=>{
+      html += `<div class="field" id="fwrap-${f.id}">
+        <label for="f-${f.id}">${f.label} ${f.req?'<span class="req">*</span>':''}</label>
+        <input type="${f.type}" id="f-${f.id}" value="${booking[f.id]||''}">
+        <div class="err-msg"></div>
+      </div>`;
+    });
+    html += `<div class="field full">
+        <label for="f-message">Beschreibung (optional)</label>
+        <textarea id="f-message" rows="3" placeholder="z. B. Zählerkasten im Keller, Zugang über Hinterhof …">${booking.message||''}</textarea>
+      </div>
+      <label class="checkline">
+        <input type="checkbox" id="f-privacy" ${booking._privacyOk?'checked':''}>
+        Ich habe die <a href="#" id="inline-datenschutz">Datenschutzerklärung</a> gelesen und stimme der Verarbeitung meiner Daten zur Terminbuchung zu. <span class="req">*</span>
+      </label>
+    </div>`;
+    body.innerHTML = html;
+
+    FORM_FIELDS.forEach(f=>{
+      document.getElementById('f-'+f.id).addEventListener('input', e=>{ booking[f.id]=e.target.value; });
+      document.getElementById('f-'+f.id).addEventListener('blur', ()=>validateField(f.id));
+    });
+    document.getElementById('f-message').addEventListener('input', e=>{ booking.message=e.target.value; });
+    document.getElementById('f-privacy').addEventListener('change', e=>{ booking._privacyOk = e.target.checked; });
+    document.getElementById('inline-datenschutz').addEventListener('click', e=>{ e.preventDefault(); document.getElementById('modal-datenschutz').classList.add('open'); });
+  }
+
+  function validateField(id){
+    const val = (booking[id]||'').trim();
+    const wrap = document.getElementById('fwrap-'+id);
+    if(!wrap) return true;
+    let msg='';
+    if(!val) msg='Pflichtfeld';
+    else if(id==='email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) msg='Bitte gültige E-Mail-Adresse angeben';
+    else if(id==='phone' && !/^[0-9+\s()\/-]{6,20}$/.test(val)) msg='Bitte gültige Telefonnummer angeben';
+    else if(id==='plz' && !/^\d{5}\s+.+/.test(val)) msg='Format: 12345 Musterstadt';
+    wrap.classList.toggle('error', !!msg);
+    wrap.querySelector('.err-msg').textContent = msg;
+    return !msg;
+  }
+
+  function validateForm(showErrors){
+    let ok=true;
+    FORM_FIELDS.forEach(f=>{
+      const valid = validateField(f.id);
+      if(!valid) ok=false;
+      if(!showErrors){} // validateField already renders inline
+    });
+    if(!booking._privacyOk){ ok=false; if(showErrors) showToast('Bitte der Datenschutzerklärung zustimmen.'); }
+    return ok;
+  }
+
+  /* ---- Step 3: Zahlung (nur bei Leistungen mit Anzahlung) ---- */
+  function renderStepPayment(){
+    const s = currentService();
+    let html = `<div class="pay-note">Für „${s.name}“ ist zur Terminsicherung eine Anzahlung von <b>${s.deposit} €</b> vorgesehen. Dieser Schritt ist eine <b>Demo</b> — es wird keine echte Zahlung ausgelöst.<span class="demo-tag">DEMO</span></div>`;
+    html += `<div class="pay-card">
+      <div class="field" style="margin-bottom:14px;">
+        <label>Zahlungsart</label>
+        <select id="pay-method">
+          <option value="card" ${booking.payment==='card'?'selected':''}>Kredit-/Debitkarte (Demo)</option>
+          <option value="onsite">Vor Ort beim Termin bezahlen</option>
+        </select>
+      </div>
+      <div id="card-fields" style="${booking.payment==='onsite'?'display:none;':''}">
+        <div class="form-grid">
+          <div class="field full">
+            <label>Name auf der Karte</label>
+            <input type="text" id="pay-name" value="${booking.cardName||''}">
+          </div>
+          <div class="field full">
+            <label>Kartennummer</label>
+            <input type="text" id="pay-number" placeholder="•••• •••• •••• ••••" value="${booking.cardNumber||''}">
+          </div>
+        </div>
+      </div>
+    </div>`;
+    body.innerHTML = html;
+    const methodSel = document.getElementById('pay-method');
+    booking.payment = booking.payment==='card' || booking.payment==='onsite' ? booking.payment : 'card';
+    methodSel.value = booking.payment;
+    methodSel.addEventListener('change', ()=>{
+      booking.payment = methodSel.value;
+      document.getElementById('card-fields').style.display = booking.payment==='card' ? '' : 'none';
+    });
+    const nameEl = document.getElementById('pay-name');
+    const numEl = document.getElementById('pay-number');
+    if(nameEl){ nameEl.addEventListener('input', e=>booking.cardName=e.target.value); }
+    if(numEl){ numEl.addEventListener('input', e=>booking.cardNumber=e.target.value); }
+  }
+
+  /* ---- Booking submit (simulate calendar sync + email) ---- */
+  async function submitBooking(){
+    const id = 'bk_'+Date.now();
+    const s = currentService();
+    const record = {
+      id, service:s.name, date:booking.date, time:booking.time,
+      name:booking.name, phone:booking.phone, email:booking.email,
+      address:booking.address, plz:booking.plz, message:booking.message,
+      payment: needsPaymentStep() ? booking.payment : 'n/a',
+      createdAt: new Date().toISOString()
+    };
+    try{
+      await window.storage.set('bookings:'+id, JSON.stringify(record), true);
+      const idxRes = await (async()=>{ try{ return await window.storage.get('booking-index', true);}catch(e){ return null; }})();
+      const idx = idxRes && idxRes.value ? JSON.parse(idxRes.value) : [];
+      idx.push(id);
+      await window.storage.set('booking-index', JSON.stringify(idx), true);
+    }catch(e){ /* Demo-Speicher best effort */ }
+    booking._lastRecord = record;
+  }
+
+  /* ---- Step 4: Bestätigung ---- */
+  function renderStepConfirm(){
+    const r = booking._lastRecord || {};
+    const dateFmt = r.date ? new Date(r.date).toLocaleDateString('de-DE',{weekday:'long', day:'2-digit', month:'long', year:'numeric'}) : '';
+    body.innerHTML = `
+      <div class="confirm-box">
+        <div class="check">✓</div>
+        <h3>Termin gebucht</h3>
+        <p style="color:var(--text-muted);">Der Termin wurde automatisch im internen Kalender des Betriebs hinterlegt. Sie erhalten außerdem eine Erinnerung 24 Stunden vorher.</p>
+        <div style="text-align:left; max-width:420px; margin:20px auto 0;">
+          <div class="summary-line"><span>Leistung</span><span>${r.service||''}</span></div>
+          <div class="summary-line"><span>Termin</span><span>${dateFmt}, ${r.time||''} Uhr</span></div>
+          <div class="summary-line"><span>Adresse</span><span>${r.address||''}, ${r.plz||''}</span></div>
+          <div class="summary-line"><span>Buchungsnummer</span><span class="mono">${r.id||''}</span></div>
+        </div>
+        <div class="email-preview">
+          <div class="hdr">Vorschau der automatischen Bestätigungs-E-Mail an ${r.email||''}</div>
+          <p style="margin:0 0 8px;"><b>Betreff:</b> Terminbestätigung — ${r.service||''} am ${dateFmt}</p>
+          <p style="margin:0;">Guten Tag ${r.name||''},<br><br>Ihr Termin für „${r.service||''}“ am ${dateFmt} um ${r.time||''} Uhr ist bestätigt. Eine Erinnerung folgt automatisch 24 Stunden vor dem Termin. Bei Fragen erreichen Sie uns unter 0 12 34 / 56 78 90.<br><br>Ihr Team von Elektro Reinhardt</p>
+        </div>
+      </div>`;
+  }
+
+  /* ---------------- INIT ---------------- */
+  loadConfig();
+  render();
+
+})();
+</script>
+</body>
+</html>
